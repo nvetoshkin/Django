@@ -24,6 +24,25 @@ test\Scripts\activate.bat
 python -m pip install Django
 ```
 
+## Создание проекта
+
+Также создадим отдельный каталог под проекты Django. В нём выполним команду
+```
+django-admin startproject site
+```
+где site - название проекта.
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## License
 [![MIT License](https://img.shields.io/apm/l/atomic-design-ui.svg?)](https://opensource.org/licenses/mit-license.php)
