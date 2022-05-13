@@ -1,5 +1,5 @@
 # 💎Django
-## Tech stack
+## 🙈Tech stack
 - [x] **Server OS:** Microsoft Windows 7 Enterprise 6.1.7601 SP1 сборка 7601
 - [x] **Web application engine:** Python 3.8.9 & Django 4.0.4
 
