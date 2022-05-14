@@ -31,6 +31,26 @@ django-admin startproject site
 ```
 где site - название проекта.
 
+Данная команда создаёт каталог вида:
+> site/
+> 
+> &emsp; manage.py
+>   
+> &emsp; site/
+>   
+>  &emsp; &emsp; \_\_init\_\_.py
+>     
+>  &emsp; &emsp; settings.py
+>     
+>  &emsp; &emsp; urls.py
+>     
+>  &emsp; &emsp; asgi.py
+>   
+>  &emsp; &emsp; wsgi.py
+
+
+      
+      
 
 
 
