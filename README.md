@@ -48,6 +48,140 @@ django-admin startproject site
 >   
 >  &emsp; &emsp; wsgi.py
 
+## Создание приложения голосования
+> Приложение – это Web-приложение, которое предоставляет определенный функционал – например, Web-блог, хранилище каких-то записей или простое приложение для голосования. Проект – это совокупность приложений и конфигурации сайта. Проект может содержать несколько приложений. Приложение может использоваться несколькими проектами.
+
+Для создания приложения нужно выполнить команду 
+```
+python manage.py startapp app
+```
+где app - название приложения.
+
+Команда создаст соответствующий подкаталог рядом с site/site
+
+> app/
+> 
+> &emsp; \_\_init\_\_.py
+>   
+> &emsp; admin.py
+>   
+>  &emsp; migrations.py 
+>     
+>  &emsp; &emsp; \_\_init\_\_.py
+>     
+> &emsp; models.py
+> 
+> &emsp; tests.py
+> 
+> &emsp; views.py
+
+## Первое представление
+Создадим первое представление в `app/views.py`
+```
+from django.http import HttpResponse
+
+def index(request):
+    return HttpResponse("Hello, world. You're at the polls index.")
+```
+
+Чтобы вызвать представление, нам нужно назначить его на какой-то URL - для этого нам нужна конфигурация URL-ов.
+
+В `app/urls.py`:
+```
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('', views.index, name='index'),
+]
+```
+Следующий шаг – добавить ссылку на app.urls в главной конфигурации URL-ов. В ``site/urls.py`` добавим импорт django.urls.include, затем include() добавим в список urlpatterns. Вы должны получить следующий код:
+```
+from django.contrib import admin
+from django.urls import include, path
+
+urlpatterns = [
+    path('polls/', include('polls.urls')),
+    path('admin/', admin.site.urls),
+]
+```
+Теперь можно обратиться к приложению по пути `localhost/app`.
+
+## Настройка БД
+База данных настраивается в `site/settings.py`. Для прототипа будет достаточно sqlite (настроена по-умолчанию).
+
+База данных содержит таблицы приложений, а также моделей.
+Для создания таблиц нужно выполнить команду
+```
+python manage.py migrate
+```
+
+## Создание моделей
+> Модель — это основной источник данных. Она содержит информацию о наборе полей и о поведении данных, которые вы храните.
+В нашем приложении голосования, мы создадим две модели: Question и Choice. Question содержит вопрос и дату публикации. Choice содержит два поля: текст ответа и подсчёт голосов. Каждый объект Choice связан с объектом Question.
+
+В `app/models.py`
+```
+from django.db import models
+
+
+class Question(models.Model):
+    question_text = models.CharField(max_length=200)
+    pub_date = models.DateTimeField('date published')
+
+
+class Choice(models.Model):
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    choice_text = models.CharField(max_length=200)
+    votes = models.IntegerField(default=0)
+```
+
+## Активация моделей
+Как было отмечено выше, с помощью миграций создаются таблицы в БД для моделей. Кроме того, создаётся Python API для доступа к моделям через веб-интерфейс.
+
+Добавим приложение к проекту в `site/settings.py`:
+```
+INSTALLED_APPS = [
+    'app.apps.AppConfig',
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+]
+```
+
+Выполняя `makemigrations`, вы говорите Django, что внесли некоторые изменения в ваши модели (в нашем случае мы создали несколько новых) и хотели бы сохранить их в миграции:
+```
+python manage.py makemigrations app
+```
+
+Если необходимо, можно выполнить `python manage.py check`. Эта команда ищет проблемы в вашем проекте не применяя миграции и не изменяя базу данных.
+
+Теперь, выполните команду `migrate` снова, чтобы создать таблицы для этих моделей в базе данных:
+```
+python manage.py migrate
+```
+> Миграции — очень мощная штука. Они позволяют изменять ваши модели в процессе развития проекта без необходимости пересоздавать таблицы в базе данных. Их задача изменять базу данных без потери данных.
+> 
+> Алгоритм работы с миграциями:
+> 1. Внесите изменения в модели (в `models.py`).
+> 2. Выполните python manage.py makemigrations чтобы создать миграцию для ваших изменений.
+> 3. Выполните python manage.py migrate чтобы применить изменения к базе данных.
+
+## Создание вопроса и ответов через API
+Чтобы запустить консоль Python выполните:
+```
+python manage.py shell
+```
+
+
+
+
+
+
+
 
       
       
