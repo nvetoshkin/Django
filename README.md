@@ -238,6 +238,23 @@ python manage.py createsuperuser
 ```
 
 Чтобы обратиться к интерфейсу администратора нужно перейти в приложение `localhost/admin/`:
+![admin_login](screens/admin_login.jpg)
+
+Чтобы приложение отображалось в интерфейсе администратора, нужно в `app/admin.py`:
+```
+from django.contrib import admin
+from .models import Question
+
+admin.site.register(Question)
+```
+
+После того как зайдём в админку, увидим:
+![site_administration](screens/site_administration.jpg)
+
+Теперь вопросы можно редактировать и добавлять из админки:
+![question_change](screens/question_change.jpg)
+
+
 
 
 
