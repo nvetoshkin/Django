@@ -360,6 +360,119 @@ urlpatterns = [
 ```
 Благодаря этому не придётся изменять код, а лишь саму ссылку в `urls.py`.
 
+## Форма для опроса
+Изменим шаблон detail.html:
+```
+<h1>{{ question.question_text }}</h1>
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<form action="{% url 'voting:vote' question.id %}" method="post">
+{% csrf_token %}
+{% for choice in question.choice_set.all %}
+    <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}">
+    <label for="choice{{ forloop.counter }}">{{ choice.choice_text }}</label><br>
+{% endfor %}
+<input type="submit" value="Vote">
+</form>
+```
+
+Изменим соответствующее представление:
+```
+from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import get_object_or_404, render
+from django.urls import reverse
+
+from .models import Choice, Question
+# ...
+def vote(request, question_id):
+    question = get_object_or_404(Question, pk=question_id)
+    try:
+        selected_choice = question.choice_set.get(pk=request.POST['choice'])
+    except (KeyError, Choice.DoesNotExist):
+        # Redisplay the question voting form.
+        return render(request, 'voting/detail.html', {
+            'question': question,
+            'error_message': "You didn't select a choice.",
+        })
+    else:
+        selected_choice.votes += 1
+        selected_choice.save()
+        # Always return an HttpResponseRedirect after successfully dealing
+        # with POST data. This prevents data from being posted twice if a
+        # user hits the Back button.
+        return HttpResponseRedirect(reverse('voting:results', args=(question.id,)))
+```
+Также перепишем шаблон и представление для страницы results:
+```
+from django.shortcuts import get_object_or_404, render
+
+def results(request, question_id):
+    question = get_object_or_404(Question, pk=question_id)
+    return render(request, 'voting/results.html', {'question': question})
+```
+
+```
+<h1>{{ question.question_text }}</h1>
+
+<ul>
+{% for choice in question.choice_set.all %}
+    <li>{{ choice.choice_text }} -- {{ choice.votes }} vote{{ choice.votes|pluralize }}</li>
+{% endfor %}
+</ul>
+
+<a href="{% url 'voting:detail' question.id %}">Vote again?</a>
+```
+
+## Общие представления
+Изменим `app/urls.py`:
+```
+from django.urls import path
+from . import views
+
+app_name = 'app'
+urlpatterns = [
+    path('', views.IndexView.as_view(), name='index'),
+    path('<int:pk>/', views.DetailView.as_view(), name='detail'),
+    path('<int:pk>/results/', views.ResultsView.as_view(), name='results'),
+    path('<int:question_id>/vote/', views.vote, name='vote'),
+]
+```
+
+Также изменим `app/views.py`:
+```
+from django.http import HttpResponseRedirect
+from django.shortcuts import get_object_or_404, render
+from django.urls import reverse
+from django.views import generic
+
+from .models import Choice, Question
+
+
+class IndexView(generic.ListView):
+    template_name = 'voting/index.html'
+    context_object_name = 'latest_question_list'
+
+    def get_queryset(self):
+        """Return the last five published questions."""
+        return Question.objects.order_by('-pub_date')[:5]
+
+
+class DetailView(generic.DetailView):
+    model = Question
+    template_name = 'voting/detail.html'
+
+
+class ResultsView(generic.DetailView):
+    model = Question
+    template_name = 'voting/results.html'
+
+
+def vote(request, question_id):
+    ... # same as above, no changes needed.
+```
+
+
 
 
 
