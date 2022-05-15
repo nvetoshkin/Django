@@ -254,6 +254,112 @@ admin.site.register(Question)
 Теперь вопросы можно редактировать и добавлять из админки:
 ![question_change](screens/question_change.jpg)
 
+## Дополнение представлений
+В `app/views.py`
+```
+def detail(request, question_id):
+    return HttpResponse("You're looking at question %s." % question_id)
+
+def results(request, question_id):
+    response = "You're looking at the results of question %s."
+    return HttpResponse(response % question_id)
+
+def vote(request, question_id):
+    return HttpResponse("You're voting on question %s." % question_id)
+```
+
+Добавим в `app/urls.py`
+```
+from django.urls import path
+
+from . import views
+
+urlpatterns = [
+    # ex: /app/
+    path('', views.index, name='index'),
+    # ex: /app/5/
+    path('<int:question_id>/', views.detail, name='detail'),
+    # ex: /app/5/results/
+    path('<int:question_id>/results/', views.results, name='results'),
+    # ex: /app/5/vote/
+    path('<int:question_id>/vote/', views.vote, name='vote'),
+]
+```
+
+## Шаблоны
+> Шаблоны нужны, чтобы отделить представление от кода.
+В `app/views.py` изменим индекс, чтобы он выводил последние 5 опросов:
+```
+from django.shortcuts import render
+from .models import Question
+
+
+def index(request):
+    latest_question_list = Question.objects.order_by('-pub_date')[:5]
+    context = {'latest_question_list': latest_question_list}
+    return render(request, 'app/index.html', context)
+```
+Для шаблонов внутри приложения нужно создать каталоги `templates/app/`.
+
+В `app/templates/app/index.html` создадим:
+```
+{% if latest_question_list %}
+    <ul>
+    {% for question in latest_question_list %}
+        <li><a href="/app/{{ question.id }}/">{{ question.question_text }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No votings are available.</p>
+{% endif %}
+```
+
+## Ошибка 404
+В `app/views.py`:
+```
+from django.shortcuts import get_object_or_404, render
+from .models import Question
+# ...
+def detail(request, question_id):
+    question = get_object_or_404(Question, pk=question_id)
+    return render(request, 'app/detail.html', {'question': question})
+```
+
+Соответствующий шаблон `app/templates/app/detail.html`:
+```
+<h1>{{ question.question_text }}</h1>
+<ul>
+{% for choice in question.choice_set.all %}
+    <li>{{ choice.choice_text }}</li>
+{% endfor %}
+</ul>
+```
+
+## Url-индифферентность
+> Лучше создать пространство имён, так как приложений может быть несколько.
+В `app/urls.py`:
+```
+from django.urls import path
+from . import views
+
+app_name = 'app'
+urlpatterns = [
+    path('', views.index, name='index'),
+    path('<int:question_id>/', views.detail, name='detail'),
+    path('<int:question_id>/results/', views.results, name='results'),
+    path('<int:question_id>/vote/', views.vote, name='vote'),
+]
+```
+Тогда строка в шаблоне с маркированным списком будет выглядить не так:
+```
+<li><a href="/app/{{ question.id }}/">{{ question.question_text }}</a></li>
+```
+а так
+```
+<li><a href="{% url 'app:detail' question.id %}">{{ question.question_text }}</a></li>
+```
+Благодаря этому не придётся изменять код, а лишь саму ссылку в `urls.py`.
+
 
 
 
@@ -277,6 +383,11 @@ admin.site.register(Question)
 
 
 
+&nbsp;
+
+&nbsp;
+
+&nbsp;
 
 ## 🐀License
 [![MIT License](https://img.shields.io/apm/l/atomic-design-ui.svg?)](https://opensource.org/licenses/mit-license.php)
