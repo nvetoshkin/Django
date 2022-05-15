@@ -81,7 +81,7 @@ python manage.py startapp app
 from django.http import HttpResponse
 
 def index(request):
-    return HttpResponse("Hello, world. You're at the polls index.")
+    return HttpResponse("Hello, world. You're at the app index.")
 ```
 
 Чтобы вызвать представление, нам нужно назначить его на какой-то URL - для этого нам нужна конфигурация URL-ов.
@@ -101,7 +101,7 @@ from django.contrib import admin
 from django.urls import include, path
 
 urlpatterns = [
-    path('polls/', include('polls.urls')),
+    path('app/', include('app.urls')),
     path('admin/', admin.site.urls),
 ]
 ```
@@ -175,6 +175,70 @@ python manage.py migrate
 ```
 python manage.py shell
 ```
+
+> Мы используем эту команду вместо просто «python», потому что manage.py устанавливает переменную окружения `DJANGO_SETTINGS_MODULE`, которая указывает Django путь импорта для файла `site/settings.py`.
+
+```
+from app.models import Choice, Question
+from django.utils import timezone
+q = Question(question_text="Как дела?", pub_date=timezone.now())
+q.save()
+#отображает все объекты
+Question.objects.all()
+#<QuerySet [<Question: Question object (1)>]>
+```
+Для того, чтобы объекты отображались в понятном виде в `app/models.py` добавим методы:
+```
+from django.db import models
+
+class Question(models.Model):
+    # ...
+    def __str__(self):
+        return self.question_text
+
+class Choice(models.Model):
+    # ...
+    def __str__(self):
+        return self.choice_text
+```
+Также добавим пользовательский метод:
+```
+import datetime
+from django.db import models
+from django.utils import timezone
+
+class Question(models.Model):
+    # ...
+    def was_published_recently(self):
+        return self.pub_date >= timezone.now() - datetime.timedelta(days=1)
+```
+
+Теперь в `python manage.py shell`:
+```
+from app.models import Choice, Question
+from django.utils import timezone
+Question.objects.all()
+#<QuerySet [<Question: Как дела?>]>
+q = Question.objects.get(pk=1)
+q.was_published_recently()
+#True
+q.choice_set.create(choice_text='Норм', votes=0)
+q.choice_set.create(choice_text='Не норм', votes=0)
+```
+
+## Интерфейс администратора
+Создадим суперпользователя:
+```
+python manage.py createsuperuser
+#Username: admin
+#Email address: admin@example.com
+#Password: **********
+#Password (again): *********
+#Superuser created successfully.
+```
+
+Чтобы обратиться к интерфейсу администратора нужно перейти в приложение `localhost/admin/`:
+
 
 
 
