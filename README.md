@@ -238,7 +238,7 @@ python manage.py createsuperuser
 ```
 
 Чтобы обратиться к интерфейсу администратора нужно перейти в приложение `localhost/admin/`:
-![admin_login](screens/admin_login.jpg)
+![admin_login](https://github.com/nvetoshkin/Django/blob/main/screens/admin_login.jpg)
 
 Чтобы приложение отображалось в интерфейсе администратора, нужно в `app/admin.py`:
 ```
@@ -249,10 +249,10 @@ admin.site1.register(Question)
 ```
 
 После того как зайдём в админку, увидим:
-![site_administration](screens/site_administration.jpg)
+![site_administration](https://github.com/nvetoshkin/Django/blob/main/screens/site_administration.jpg)
 
 Теперь вопросы можно редактировать и добавлять из админки:
-![question_change](screens/question_change.jpg)
+![question_change](https://github.com/nvetoshkin/Django/blob/main/screens/question_change.jpg)
 
 ## Дополнение представлений
 В `app/views.py`
