@@ -27,16 +27,16 @@ python -m pip install Django
 
 Также создадим отдельный каталог под проекты Django. В нём выполним команду
 ```
-django-admin startproject site
+django-admin startproject site1
 ```
-где site - название проекта.
+где site1 - название проекта.
 
 Данная команда создаёт каталог вида:
-> site/
+> site1/
 > 
 > &emsp; manage.py
 >   
-> &emsp; site/
+> &emsp; site1/
 >   
 >  &emsp; &emsp; \_\_init\_\_.py
 >     
@@ -57,7 +57,7 @@ python manage.py startapp app
 ```
 где app - название приложения.
 
-Команда создаст соответствующий подкаталог рядом с site/site
+Команда создаст соответствующий подкаталог рядом с site1/site1
 
 > app/
 > 
@@ -95,20 +95,20 @@ urlpatterns = [
     path('', views.index, name='index'),
 ]
 ```
-Следующий шаг – добавить ссылку на app.urls в главной конфигурации URL-ов. В ``site/urls.py`` добавим импорт django.urls.include, затем include() добавим в список urlpatterns. Вы должны получить следующий код:
+Следующий шаг – добавить ссылку на app.urls в главной конфигурации URL-ов. В ``site1/urls.py`` добавим импорт django.urls.include, затем include() добавим в список urlpatterns. Вы должны получить следующий код:
 ```
 from django.contrib import admin
 from django.urls import include, path
 
 urlpatterns = [
     path('app/', include('app.urls')),
-    path('admin/', admin.site.urls),
+    path('admin/', admin.site1.urls),
 ]
 ```
 Теперь можно обратиться к приложению по пути `localhost/app`.
 
 ## Настройка БД
-База данных настраивается в `site/settings.py`. Для прототипа будет достаточно sqlite (настроена по-умолчанию).
+База данных настраивается в `site1/settings.py`. Для прототипа будет достаточно sqlite (настроена по-умолчанию).
 
 База данных содержит таблицы приложений, а также моделей.
 Для создания таблиц нужно выполнить команду
@@ -139,7 +139,7 @@ class Choice(models.Model):
 ## Активация моделей
 Как было отмечено выше, с помощью миграций создаются таблицы в БД для моделей. Кроме того, создаётся Python API для доступа к моделям через веб-интерфейс.
 
-Добавим приложение к проекту в `site/settings.py`:
+Добавим приложение к проекту в `site1/settings.py`:
 ```
 INSTALLED_APPS = [
     'app.apps.AppConfig',
@@ -176,7 +176,7 @@ python manage.py migrate
 python manage.py shell
 ```
 
-> Мы используем эту команду вместо просто «python», потому что manage.py устанавливает переменную окружения `DJANGO_SETTINGS_MODULE`, которая указывает Django путь импорта для файла `site/settings.py`.
+> Мы используем эту команду вместо просто «python», потому что manage.py устанавливает переменную окружения `DJANGO_SETTINGS_MODULE`, которая указывает Django путь импорта для файла `site1/settings.py`.
 
 ```
 from app.models import Choice, Question
@@ -245,7 +245,7 @@ python manage.py createsuperuser
 from django.contrib import admin
 from .models import Question
 
-admin.site.register(Question)
+admin.site1.register(Question)
 ```
 
 После того как зайдём в админку, увидим:
@@ -367,7 +367,7 @@ urlpatterns = [
 
 {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
 
-<form action="{% url 'voting:vote' question.id %}" method="post">
+<form action="{% url 'app:vote' question.id %}" method="post">
 {% csrf_token %}
 {% for choice in question.choice_set.all %}
     <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}">
@@ -391,7 +391,7 @@ def vote(request, question_id):
         selected_choice = question.choice_set.get(pk=request.POST['choice'])
     except (KeyError, Choice.DoesNotExist):
         # Redisplay the question voting form.
-        return render(request, 'voting/detail.html', {
+        return render(request, 'app/detail.html', {
             'question': question,
             'error_message': "You didn't select a choice.",
         })
@@ -401,7 +401,7 @@ def vote(request, question_id):
         # Always return an HttpResponseRedirect after successfully dealing
         # with POST data. This prevents data from being posted twice if a
         # user hits the Back button.
-        return HttpResponseRedirect(reverse('voting:results', args=(question.id,)))
+        return HttpResponseRedirect(reverse('app:results', args=(question.id,)))
 ```
 Также перепишем шаблон и представление для страницы results:
 ```
@@ -409,7 +409,7 @@ from django.shortcuts import get_object_or_404, render
 
 def results(request, question_id):
     question = get_object_or_404(Question, pk=question_id)
-    return render(request, 'voting/results.html', {'question': question})
+    return render(request, 'app/results.html', {'question': question})
 ```
 
 ```
@@ -421,7 +421,7 @@ def results(request, question_id):
 {% endfor %}
 </ul>
 
-<a href="{% url 'voting:detail' question.id %}">Vote again?</a>
+<a href="{% url 'app:detail' question.id %}">Vote again?</a>
 ```
 
 ## Общие представления
@@ -450,7 +450,7 @@ from .models import Choice, Question
 
 
 class IndexView(generic.ListView):
-    template_name = 'voting/index.html'
+    template_name = 'app/index.html'
     context_object_name = 'latest_question_list'
 
     def get_queryset(self):
@@ -460,12 +460,12 @@ class IndexView(generic.ListView):
 
 class DetailView(generic.DetailView):
     model = Question
-    template_name = 'voting/detail.html'
+    template_name = 'app/detail.html'
 
 
 class ResultsView(generic.DetailView):
     model = Question
-    template_name = 'voting/results.html'
+    template_name = 'app/results.html'
 
 
 def vote(request, question_id):
